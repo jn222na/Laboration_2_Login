@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 setlocale(LC_ALL, "sv_SE", "swedish");
 require_once 'modelLogin.php';
@@ -7,8 +7,6 @@ class viewHTML {
 	private $usrValue = '';
 	private $password = '';
 	private $msg = '';
-	private $cookieStore;
-    private $usernameValue;
     private $model;
 
 //TODO: FIXA
@@ -17,8 +15,66 @@ class viewHTML {
 	}
 
 
+public function echoHTML($msg){
+    $ret="";
+    		//Clock function
+		/*
+		 * nl2br allows \n within variable
+		 * strftime let us print date from our locale time
+		 */
+    $dat = nl2br(ucwords(strftime("%Aen den %d %B.\n " . "År" . " %Y.\n Klockan " . "Är" . " %X.")));
+    //Om inloggningen lyckades
+    if($this->model->loginStatus()){
+        $ret ="
+			<h1>
+				Laboration_2
+			</h1>
+			<h2>
+				Admin Inloggad!
+			</h2>
+			$msg
+			$this->msg
+			<form  method='post'> 
+		    	<input type='submit'  name='logOut' value='Logga ut'/>
+			</form>
+			" . $dat . "
+        ";
+    }
+    //Om inloggningen misslyckades
+    else{
+        $ret = "
+        <h1>
+			Laboration_2
+		</h1>
+		<h2>
+				Ej inloggad
+		</h2>
+	<h3>$msg</h3>
+    <h3>$this->msg</h3> 
+       <form id='login'   method='post'>
+    		<label for='username'>Username:</label>
+    			<br>
+    		<input type='text'  name='username' value='$this->usrValue' id='username'>
+    			<br>
+    		<label for='password'>Password:</label>
+    			<br>
+    		<input type='password'   name='password' id='password'>
+    			<br>
+    		<input type='checkbox' name='checkSave' value='remember'>Remember me
+    			<br>
+    		<input type='submit'  name='submit'  value='Submit'/>
+	    </form>  
+		 <div>
+		 <p>$dat <br> </p>
+		 
+		
+		 </div>";
+        
+    }
+    return $ret;
+}
 
-
+//Om användaren klickar login och det är korrekt 
 public function didUserPressLogin(){
 	    $username = $_POST['username'];
 	    $password = $_POST['password'];
@@ -45,7 +101,7 @@ public function didUserPressLogin(){
 		return FALSE;
 	    
 	}
-	
+	//Get funktioner
 	public function getUsername(){
 	    if(isset($_POST['username'])){
 	        return  $_POST['username'];
@@ -56,7 +112,15 @@ public function didUserPressLogin(){
 	        return  $_POST['password'];
 	    }
 	}
-	public function checkedCredBox(){
+	
+	public function getCookieUsername(){
+		return $_COOKIE['cookieUsername'];
+	}
+	
+	public function getCookiePassword(){
+		return $_COOKIE['cookiePassword'];
+	}
+	public function checkedRememberBox(){
 	    if(isset($_POST['checkSave'])){
 	        return TRUE;
 	    }
@@ -64,11 +128,23 @@ public function didUserPressLogin(){
 	        return FALSE;
 	    }
 	}
-	public function saveCredentials(){
+	//Sätter kakor och krypterar lösenord
+	public function rememberUser(){
 	              setcookie('cookieUsername', $_POST['username'], time()+60*60*24*30);
 				  setcookie('cookiePassword', md5($_POST['password']), time()+60*60*24*30);
-			
-				 $this->message ="Login successfull and your credentials have been saved.";
+				  
+        		$cookieTime = time()+60*60*24*30;
+        		file_put_contents('cookieTime.txt', $cookieTime);
+				 $this->message ="Login successfull and you will be remembered.";
+	}
+	//Kollar om kakorna är satta
+	public function checkCookie(){
+	    if(isset($_COOKIE['cookieUsername']) && isset($_COOKIE['cookiePassword'])){
+			return true;
+		}
+		else{
+			return false;
+		}
 	}
 	
 	public function removeCookies() {
@@ -86,62 +162,7 @@ public function didUserPressLogin(){
 
 
 
-public function echoHTML($msg){
-    $ret="";
-    		//Clock function
-		/*
-		 * nl2br allows \n within variable
-		 * strftime let us print date from our locale time
-		 */
-		 
-    $dat = nl2br(ucwords(strftime("%Aen den %d %B.\n " . "År" . " %Y.\n Klockan " . "Är" . " %X.")));
-    if($this->model->sessionStatus()){
-        $ret ="
-			<h1>
-				Laboration_2
-			</h1>
-			<h2>
-				Admin Inloggad!
-			</h2>
-			$msg
-			$this->msg
-			<form  method='post'> 
-		    	<input type='submit'  name='logOut' value='Logga ut'/>
-			</form>
-			" . $dat . "
-        ";
-    }
-    else{
-        $ret = "
-        <h1>
-			Laboration_2
-		</h1>
-		<h2>
-				Ej inloggad
-		</h2>
-	<h3>$msg</h3>
-       <form id='login'   method='post'>
-    		<label for='username'>Username:</label>
-    			<br>
-    		<input type='text'  name='username' value='$this->usrValue' id='username'>
-    			<br>
-    		<label for='password'>Password:</label>
-    			<br>
-    		<input type='password'   name='password' id='password'>
-    			<br>
-    		<input type='checkbox' name='checkSave' value='Save credentials'>Save credentials
-    			<br>
-    		<input type='submit'  name='submit'  value='Submit'/>
-	    </form>  
-		 <div>
-		 <p>$dat <br> </p>
-		 <p> $this->msg</p>
-		
-		 </div>";
-        
-    }
-    return $ret;
-}
+
 	
 	
 //	public function nameCheck($username, $password) {
