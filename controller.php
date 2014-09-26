@@ -17,13 +17,29 @@ require_once 'modelLogin.php';
               $password = $this->view->getPassword();
               $msg = "";
               
+    //Om sessionen inte är satt 
+            if($this->model->loginStatus() == FALSE){
+    // kolla om cookies är satta
+		   	if($this->view->checkCookie()){
+	  //Är dom det skicka kaknamn och kaklösen vidare 
+				if($this->model->checkLoginCookie($this->view->getCookieUsername(), $this->view->getCookiePassword())){
+					$msg = "Login with cookies successfull";
+				}else{
+    //annars ta bort
+					$this->view->removeCookies();
+					$msg = "Cookie contains wrong information";
+				}
+			}
+		}
+    //Om användaren vill logga in          
               if($this->view->didUserPressLogin()){
                 if($username != "" && $password != ""){
+    //Om han kryssat i "remember me"                
                   if($this->model->checkLogin($username, $password)){
                       $msg = "Successful login";
-                      if($this->view->checkedCredBox()){
-                          $this->view->saveCredentials();
-                          $msg = "Login successful and credentials saved";
+                      if($this->view->checkedRememberBox()){
+                          $this->view->rememberUser();
+                          $msg = "Login successful you will be remembered";
                       }
                       
                   }
@@ -32,13 +48,13 @@ require_once 'modelLogin.php';
                   }
                }
               }
+    //Om användaren klickar logout
               if($this->view->didUserPressLogout()){
-                  $this->model->destroySession();
                   $this->view->removeCookies();
+                  $this->model->destroySession();
                   $msg =  "User logged out";
               }
-
-              
+    //Skickar med meddelandet till echoHTML
               return $this->view->echoHTML($msg);
           }
         } 
